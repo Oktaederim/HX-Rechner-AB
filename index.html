@@ -11,7 +11,7 @@
     <div class="container">
         <header>
             <h1>Lüftungstechnischer Prozess-Rechner</h1>
-            <p>Vergleichen Sie den Ausgangs- mit dem Zielzustand und ermitteln Sie die erforderlichen Prozessleistungen.</p>
+            <p>Vergleichen Sie den Ausgangs- mit dem Zielzustand und ermitteln Sie die erforderliche Prozessleistung.</p>
         </header>
 
         <div id="notification-area" class="notification hidden"></div>
@@ -37,9 +37,9 @@
                 <div class="comfort-status hidden" id="comfort-initial">✅ Behaglichkeitsfeld erreicht</div>
                 <div class="results-wrapper">
                     <div class="result-item"><span class="label">Absolute Feuchte (x)</span><span class="value" id="x-initial-g-kg"></span></div>
-                    <div class="result-item"><span class="label">Wassergehalt</span><span class="value" id="x-initial-g-m3"></span></div>
                     <div class="result-item"><span class="label">Enthalpie (h)</span><span class="value" id="h-initial"></span></div>
                     <div class="result-item"><span class="label">Taupunkttemperatur (t_d)</span><span class="value" id="td-initial"></span></div>
+                    <div class="result-item"><span class="label">Feuchtkugeltemperatur (t_w)</span><span class="value" id="tw-initial"></span></div>
                 </div>
             </div>
 
@@ -56,25 +56,31 @@
                 <div class="comfort-status hidden" id="comfort-target">✅ Behaglichkeitsfeld erreicht</div>
                  <div class="results-wrapper">
                     <div class="result-item"><span class="label">Absolute Feuchte (x)</span><span class="value" id="x-target-g-kg"></span></div>
-                    <div class="result-item"><span class="label">Wassergehalt</span><span class="value" id="x-target-g-m3"></span></div>
                     <div class="result-item"><span class="label">Enthalpie (h)</span><span class="value" id="h-target"></span></div>
                     <div class="result-item"><span class="label">Taupunkttemperatur (t_d)</span><span class="value" id="td-target"></span></div>
+                    <div class="result-item"><span class="label">Feuchtkugeltemperatur (t_w)</span><span class="value" id="tw-target"></span></div>
                 </div>
             </div>
         </main>
         
         <div class="process-results card">
             <h2>Prozessanalyse</h2>
-            <div id="process-steps">
-                </div>
+            <div class="result-item large">
+                <span class="label">Heizleistung</span>
+                <span class="value heat-value" id="power-heat">0.00 kW</span>
+            </div>
+            <div class="result-item large">
+                <span class="label">Kühlleistung</span>
+                <span class="value cool-value" id="power-cool">0.00 kW</span>
+            </div>
             <div class="result-item">
                 <span class="label">Wasserbilanz</span>
                 <span class="value" id="water-diff"></span>
             </div>
              <div class="explanations">
                 <h3>Erläuterungen für die Praxis</h3>
-                <p><strong>Behaglichkeitsfeld:</strong> Definiert nach DIN EN ISO 7730 als der Bereich, in dem sich die meisten Menschen thermisch wohlfühlen (typ. 20-26°C und 40-60% r.F.).</p>
-                <p><strong>Entfeuchtungsprozess:</strong> Um eine Entfeuchtung zu erreichen (z.B. von 50% auf 35% r.F.), wird die Luft über einen Kühler auf eine Temperatur **unterhalb des Ziel-Taupunktes** abgekühlt. Dabei kondensiert Wasser. Anschließend wird die kalte, trockene Luft im Nacherhitzer wieder auf die gewünschte Raumtemperatur aufgeheizt.</p>
+                <p id="explanation-dehumidification"></p>
+                <p><strong>Feuchtkugeltemperatur (t_w):</strong> Dies ist die tiefste Temperatur, die durch rein adiabate Verdunstungskühlung (z.B. in einem Befeuchter) erreicht werden kann. Sie ist die theoretische Grenze für die Kühlung ohne externen Kälteeinsatz.</p>
              </div>
         </div>
     </div>
