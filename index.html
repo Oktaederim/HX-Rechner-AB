@@ -3,72 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktiver Klima-Rechner</title>
+    <title>Lüftungstechnischer Prozess-Rechner</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="container">
         <header>
-            <h1>Klima-Rechner 🌡️💧</h1>
-            <p>Geben Sie zwei bekannte Werte ein, um alle anderen zu berechnen.</p>
+            <h1>Lüftungstechnischer Prozess-Rechner</h1>
+            <p>Vergleichen Sie den Ausgangs- mit dem Zielzustand und ermitteln Sie die erforderliche Prozessleistung.</p>
         </header>
 
-        <div class="mode-switcher">
-            <label for="mode-toggle" class="mode-label">Einfach</label>
-            <label class="switch">
-                <input type="checkbox" id="mode-toggle">
-                <span class="slider"></span>
-            </label>
-            <label for="mode-toggle" class="mode-label">Experte</label>
+        <div class="input-master card">
+             <div class="input-group">
+                <label for="volume-flow">Volumenstrom (m³/h)</label>
+                <input type="number" id="volume-flow" value="1000">
+            </div>
         </div>
 
-        <main>
-            <div class="input-section card">
-                <h2>1. Luftzustand eingeben</h2>
+        <main class="process-grid">
+            <div class="state-column card">
+                <h2>Ausgangszustand</h2>
                 <div class="input-group">
-                    <label for="temperature">Temperatur (°C)</label>
-                    <input type="number" id="temperature" value="22">
+                    <label for="temp-initial">Temperatur (°C)</label>
+                    <input type="number" id="temp-initial" value="22">
                 </div>
                 <div class="input-group">
-                    <label for="humidity">Relative Feuchte (%)</label>
-                    <input type="number" id="humidity" value="50">
+                    <label for="rh-initial">Relative Feuchte (%)</label>
+                    <input type="number" id="rh-initial" value="50">
+                </div>
+                <div class="results-wrapper">
+                    <div class="result-item"><span class="label">Absolute Feuchte (x)</span><span class="value" id="x-initial-g-kg"></span></div>
+                    <div class="result-item"><span class="label">Wassergehalt</span><span class="value" id="x-initial-g-m3"></span></div>
+                    <div class="result-item"><span class="label">Enthalpie (h)</span><span class="value" id="h-initial"></span></div>
+                    <div class="result-item"><span class="label">Taupunkttemperatur (t_d)</span><span class="value" id="td-initial"></span></div>
+                    <div class="result-item"><span class="label">Feuchtkugeltemperatur (t_w)</span><span class="value" id="tw-initial"></span></div>
+                    <div class="result-item"><span class="label">Dichte (ρ)</span><span class="value" id="rho-initial"></span></div>
                 </div>
             </div>
 
-            <div class="output-section card">
-                <h2>2. Ergebnisse</h2>
-                
-                <div class="result-item" id="result-dew-point">
-                    <span class="label">Taupunkt:</span>
-                    <span class="value" id="dew-point-value"></span>
-                    <p class="explanation">Kalte Flächen (z.B. Fenster) beschlagen erst, wenn sie kälter als dieser Wert sind. Ein niedriger Wert beugt Schimmel vor.</p>
+            <div class="state-column card">
+                <h2>Zielzustand</h2>
+                 <div class="input-group">
+                    <label for="temp-target">Temperatur (°C)</label>
+                    <input type="number" id="temp-target" value="14">
                 </div>
-                <div class="result-item" id="result-absolute-humidity">
-                    <span class="label">Absolute Feuchte:</span>
-                    <span class="value" id="absolute-humidity-value"></span>
-                    <p class="explanation">So viel Gramm Wasser sind tatsächlich in einem Kilogramm Luft gelöst. Ideal zum Wäschetrocknen ist ein Wert unter 8 g/kg.</p>
+                <div class="input-group">
+                    <label for="rh-target">Relative Feuchte (%)</label>
+                    <input type="number" id="rh-target" value="95">
                 </div>
-
-                <div class="result-item expert-view hidden" id="result-enthalpy">
-                    <span class="label">Enthalpie (h):</span>
-                    <span class="value" id="enthalpy-value"></span>
-                </div>
-                <div class="result-item expert-view hidden" id="result-wet-bulb">
-                    <span class="label">Feuchtkugeltemperatur:</span>
-                     <span class="value" id="wet-bulb-value"></span>
-                </div>
-                <div class="result-item expert-view hidden" id="result-density">
-                    <span class="label">Dichte (ρ):</span>
-                    <span class="value" id="density-value"></span>
-                </div>
-                 <div class="result-item expert-view hidden" id="result-specific-volume">
-                    <span class="label">Spezifisches Volumen:</span>
-                    <span class="value" id="specific-volume-value"></span>
+                 <div class="results-wrapper">
+                    <div class="result-item"><span class="label">Absolute Feuchte (x)</span><span class="value" id="x-target-g-kg"></span></div>
+                    <div class="result-item"><span class="label">Wassergehalt</span><span class="value" id="x-target-g-m3"></span></div>
+                    <div class="result-item"><span class="label">Enthalpie (h)</span><span class="value" id="h-target"></span></div>
+                    <div class="result-item"><span class="label">Taupunkttemperatur (t_d)</span><span class="value" id="td-target"></span></div>
+                    <div class="result-item"><span class="label">Feuchtkugeltemperatur (t_w)</span><span class="value" id="tw-target"></span></div>
+                    <div class="result-item"><span class="label">Dichte (ρ)</span><span class="value" id="rho-target"></span></div>
                 </div>
             </div>
         </main>
-
+        
+        <div class="process-results card">
+            <h2>Prozessanalyse</h2>
+            <div class="result-item large">
+                <span class="label" id="power-label">Erforderliche Leistung</span>
+                <span class="value" id="power-total"></span>
+            </div>
+            <div class="result-item">
+                <span class="label">Wasserabscheidung / -zugabe</span>
+                <span class="value" id="water-diff"></span>
+            </div>
+             <div class="explanations">
+                <h3>Erläuterungen für die Praxis</h3>
+                <p><strong>Taupunkttemperatur (t_d):</strong> Dies ist die Temperatur, bei der die Luft mit Wasser gesättigt ist und Kondensat ausfällt. Um eine Entfeuchtung auf den Ziel-Taupunkt zu erreichen, muss die Oberflächentemperatur des Kühlers **unter dem Ziel-Taupunkt** liegen, um eine ausreichende Wärmeübertragung und Kondensation zu gewährleisten.</p>
+                <p><strong>Feuchtkugeltemperatur (t_w):</strong> Dies ist die tiefste Temperatur, die durch rein adiabate Verdunstungskühlung (z.B. in einem Befeuchter) erreicht werden kann. Sie ist die theoretische Grenze für die Kühlung ohne externen Kälteeinsatz.</p>
+                <p><strong>Wassergehalt (g/m³ oder L/m³):</strong> Dieser Wert ist oft praktischer als g/kg, da Lüftungsanlagen auf Volumenströme (m³/h) ausgelegt sind. Er gibt direkt an, wie viel Wassermasse sich in einem Kubikmeter des Luft-Wasser-Gemisches befindet.</p>
+             </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
