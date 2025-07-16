@@ -2,13 +2,15 @@
     --primary-color: #005A9C;  /* Kälte: Blau */
     --secondary-color: #D9534F; /* Wärme: Rot */
     --success-color: #28a745;
+    --warning-color: #ffc107;
+    --warning-text-color: #856404;
     --background-color: #f4f7f6;
     --card-background: #ffffff;
     --text-color: #333;
     --label-color: #555;
     --border-color: #e0e0e0;
 }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 2rem; font-size: 16px; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 1rem; font-size: 16px; }
 .container { width: 100%; max-width: 900px; margin: 0 auto; }
 header { text-align: center; margin-bottom: 1rem; }
 h1 { color: var(--primary-color); margin-bottom: 0.5rem; }
@@ -32,7 +34,16 @@ h2 { color: var(--label-color); font-size: 1.25rem; border-bottom: 2px solid var
 .notification { padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-weight: 600; text-align: center; }
 .notification.error { background-color: var(--secondary-color); color: white; }
 .hidden { display: none; }
-.comfort-status { background-color: #eaf6ec; color: var(--success-color); padding: 0.5rem; margin-top: 1rem; border-radius: 4px; text-align: center; font-weight: 600; font-size: 0.9rem; }
-/* Farbkodierung für Leistung */
+.comfort-status { padding: 0.5rem; margin: 1rem 0 0.5rem 0; border-radius: 4px; text-align: center; font-weight: 600; font-size: 0.9rem; }
+.comfort-status.success { background-color: #eaf6ec; color: var(--success-color); }
+.comfort-status.warning { background-color: #fff8e1; color: var(--warning-text-color); }
 .heat-value { color: var(--secondary-color); }
 .cool-value { color: var(--primary-color); }
+
+/* --- Responsives Design für Smartphones --- */
+@media (max-width: 768px) {
+  body { padding: 1rem; }
+  .process-grid {
+    grid-template-columns: 1fr; /* Spalten untereinander anordnen */
+  }
+}
