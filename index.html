@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiver Klima-Rechner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Klima-Rechner 🌡️💧</h1>
+            <p>Geben Sie zwei bekannte Werte ein, um alle anderen zu berechnen.</p>
+        </header>
+
+        <div class="mode-switcher">
+            <label for="mode-toggle" class="mode-label">Einfach</label>
+            <label class="switch">
+                <input type="checkbox" id="mode-toggle">
+                <span class="slider"></span>
+            </label>
+            <label for="mode-toggle" class="mode-label">Experte</label>
+        </div>
+
+        <main>
+            <div class="input-section card">
+                <h2>1. Luftzustand eingeben</h2>
+                <div class="input-group">
+                    <label for="temperature">Temperatur (°C)</label>
+                    <input type="number" id="temperature" value="22">
+                </div>
+                <div class="input-group">
+                    <label for="humidity">Relative Feuchte (%)</label>
+                    <input type="number" id="humidity" value="50">
+                </div>
+            </div>
+
+            <div class="output-section card">
+                <h2>2. Ergebnisse</h2>
+                
+                <div class="result-item" id="result-dew-point">
+                    <span class="label">Taupunkt:</span>
+                    <span class="value" id="dew-point-value"></span>
+                    <p class="explanation">Kalte Flächen (z.B. Fenster) beschlagen erst, wenn sie kälter als dieser Wert sind. Ein niedriger Wert beugt Schimmel vor.</p>
+                </div>
+                <div class="result-item" id="result-absolute-humidity">
+                    <span class="label">Absolute Feuchte:</span>
+                    <span class="value" id="absolute-humidity-value"></span>
+                    <p class="explanation">So viel Gramm Wasser sind tatsächlich in einem Kilogramm Luft gelöst. Ideal zum Wäschetrocknen ist ein Wert unter 8 g/kg.</p>
+                </div>
+
+                <div class="result-item expert-view hidden" id="result-enthalpy">
+                    <span class="label">Enthalpie (h):</span>
+                    <span class="value" id="enthalpy-value"></span>
+                </div>
+                <div class="result-item expert-view hidden" id="result-wet-bulb">
+                    <span class="label">Feuchtkugeltemperatur:</span>
+                     <span class="value" id="wet-bulb-value"></span>
+                </div>
+                <div class="result-item expert-view hidden" id="result-density">
+                    <span class="label">Dichte (ρ):</span>
+                    <span class="value" id="density-value"></span>
+                </div>
+                 <div class="result-item expert-view hidden" id="result-specific-volume">
+                    <span class="label">Spezifisches Volumen:</span>
+                    <span class="value" id="specific-volume-value"></span>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
