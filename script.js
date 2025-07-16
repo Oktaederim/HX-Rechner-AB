@@ -1,93 +1,118 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTE AUSWÄHLEN ---
-    const tempInput = document.getElementById('temperature');
-    const humidityInput = document.getElementById('humidity');
-    const modeToggle = document.getElementById('mode-toggle');
+    const inputs = {
+        v_flow: document.getElementById('volume-flow'),
+        t_initial: document.getElementById('temp-initial'),
+        rh_initial: document.getElementById('rh-initial'),
+        t_target: document.getElementById('temp-target'),
+        rh_target: document.getElementById('rh-target'),
+    };
 
-    const expertViews = document.querySelectorAll('.expert-view');
-    
-    // Ausgabe-Elemente
-    const dewPointValue = document.getElementById('dew-point-value');
-    const absHumidityValue = document.getElementById('absolute-humidity-value');
-    const enthalpyValue = document.getElementById('enthalpy-value');
-    const wetBulbValue = document.getElementById('wet-bulb-value');
-    const densityValue = document.getElementById('density-value');
-    const specificVolumeValue = document.getElementById('specific-volume-value');
-    
-
-    // --- BERECHNUNGSFUNKTION ---
-    function calculatePsychrometrics() {
-        const t = parseFloat(tempInput.value); // Temperatur in °C
-        const rh = parseFloat(humidityInput.value); // Relative Feuchte in %
-
-        if (isNaN(t) || isNaN(rh)) {
-            return; // Beenden, wenn Eingaben ungültig sind
+    const outputs = {
+        initial: {
+            x_g_kg: document.getElementById('x-initial-g-kg'),
+            x_g_m3: document.getElementById('x-initial-g-m3'),
+            h: document.getElementById('h-initial'),
+            td: document.getElementById('td-initial'),
+            tw: document.getElementById('tw-initial'),
+            rho: document.getElementById('rho-initial'),
+        },
+        target: {
+            x_g_kg: document.getElementById('x-target-g-kg'),
+            x_g_m3: document.getElementById('x-target-g-m3'),
+            h: document.getElementById('h-target'),
+            td: document.getElementById('td-target'),
+            tw: document.getElementById('tw-target'),
+            rho: document.getElementById('rho-target'),
+        },
+        process: {
+            power_label: document.getElementById('power-label'),
+            power_total: document.getElementById('power-total'),
+            water_diff: document.getElementById('water-diff'),
         }
+    };
 
-        // --- KERNFORMELN DER PSYCHROMETRIE ---
+    // --- BERECHNUNGSFUNKTION FÜR EINEN ZUSTAND ---
+    function calculateState(t, rh) {
+        if (isNaN(t) || isNaN(rh)) return null;
 
-        // 1. Sättigungsdampfdruck (Magnus-Formel)
-        const SDD = 6.112 * Math.exp((17.62 * t) / (243.12 + t)); // in hPa
-
-        // 2. Partialdampfdruck
-        const DD = (rh / 100) * SDD; // in hPa
-
-        // 3. Taupunkttemperatur
-        const v = Math.log(DD / 6.112);
-        const Td = (243.12 * v) / (17.62 - v); // in °C
-
-        // 4. Absolute Feuchte (x) in g/kg
-        // p = atmosphärischer Druck, ca. 1013.25 hPa auf Meereshöhe
-        const p = 1013.25; 
-        const x = 622 * (DD / (p - DD)); // in g Wasser / kg trockene Luft
-
-        // 5. Enthalpie (h) in kJ/kg
-        // h = 1.006*t + x/1000 * (2501 + 1.86*t)
-        const h = 1.006 * t + (x / 1000) * (2501 + 1.86 * t);
-
-        // 6. Dichte (ρ) in kg/m³
-        const R_d = 287.058; // Gaskonstante für trockene Luft
-        const R_v = 461.52; // Gaskonstante für Wasserdampf
-        const T_kelvin = t + 273.15;
-        // p_d = Partialdruck trockene Luft, p_v = Partialdruck Wasserdampf
-        const p_v = DD * 100; // in Pa
-        const p_d = (p * 100) - p_v; // in Pa
-        const rho = (p_d / (R_d * T_kelvin)) + (p_v / (R_v * T_kelvin));
-
-        // 7. Spezifisches Volumen in m³/kg
-        const v_spec = 1 / rho;
+        const p = 1013.25; // hPa, atmosphärischer Druck
         
-        // 8. Feuchtkugeltemperatur (Annäherung, exakte Berechnung ist iterativ)
-        // Für die meisten Fälle ist eine Annäherung ausreichend.
-        // Eine einfache (aber ungenaue) Annäherung ist der Mittelwert aus Taupunkt und Temperatur.
-        // Eine bessere Annäherung verwendet die Enthalpie, ist aber komplex.
-        // Hier als Beispiel die einfache Annäherung:
-        const Tw = t - ( (100 - rh) / 5 ); // Stütz-Formel als grobe Annäherung
+        // Sättigungsdampfdruck (hPa)
+        const SDD = 6.112 * Math.exp((17.62 * t) / (243.12 + t));
+        // Partialdampfdruck (hPa)
+        const DD = (rh / 100) * SDD;
+        // Taupunkttemperatur (°C)
+        const v = Math.log(DD / 6.112);
+        const Td = (243.12 * v) / (17.62 - v);
+        // Absolute Feuchte (g/kg)
+        const x_g_kg = 622 * (DD / (p - DD));
+        // Enthalpie (kJ/kg)
+        const h = 1.006 * t + (x_g_kg / 1000) * (2501 + 1.86 * t);
+        // Dichte (kg/m³)
+        const T_kelvin = t + 273.15;
+        const p_v = DD * 100;
+        const p_d = (p * 100) - p_v;
+        const rho = (p_d / (287.058 * T_kelvin)) + (p_v / (461.52 * T_kelvin));
+        // Feuchtkugeltemperatur (°C) - Annäherung nach Stull
+        const Tw = t * Math.atan(0.151977 * Math.pow(rh + 8.313659, 0.5)) + Math.atan(t + rh) - Math.atan(rh - 1.676331) + 0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) - 4.686035;
+        // Wassergehalt (g/m³)
+        const x_g_m3 = x_g_kg * rho;
 
-        // --- ERGEBNISSE ANZEIGEN ---
-        dewPointValue.textContent = `${Td.toFixed(1)} °C`;
-        absHumidityValue.textContent = `${x.toFixed(2)} g/kg`;
-        enthalpyValue.textContent = `${h.toFixed(2)} kJ/kg`;
-        wetBulbValue.textContent = `${Tw.toFixed(1)} °C`;
-        densityValue.textContent = `${rho.toFixed(3)} kg/m³`;
-        specificVolumeValue.textContent = `${v_spec.toFixed(3)} m³/kg`;
+        return { t, rh, Td, x_g_kg, x_g_m3, h, rho, Tw };
     }
 
-    // --- MODUS-UMSCHALTUNG ---
-    function handleModeChange() {
-        if (modeToggle.checked) { // Experten-Modus
-            expertViews.forEach(el => el.classList.remove('hidden'));
-        } else { // Einfacher Modus
-            expertViews.forEach(el => el.classList.add('hidden'));
-        }
+    // --- HAUPTFUNKTION ZUR AKTUALISIERUNG ---
+    function updateAll() {
+        const initial_state = calculateState(parseFloat(inputs.t_initial.value), parseFloat(inputs.rh_initial.value));
+        const target_state = calculateState(parseFloat(inputs.t_target.value), parseFloat(inputs.rh_target.value));
+        const v_flow = parseFloat(inputs.v_flow.value);
+
+        if (!initial_state || !target_state || isNaN(v_flow)) return;
+
+        // UI für Ausgangszustand füllen
+        outputs.initial.x_g_kg.textContent = `${initial_state.x_g_kg.toFixed(2)} g/kg`;
+        outputs.initial.x_g_m3.textContent = `${initial_state.x_g_m3.toFixed(2)} g/m³`;
+        outputs.initial.h.textContent = `${initial_state.h.toFixed(2)} kJ/kg`;
+        outputs.initial.td.textContent = `${initial_state.Td.toFixed(1)} °C`;
+        outputs.initial.tw.textContent = `${initial_state.Tw.toFixed(1)} °C`;
+        outputs.initial.rho.textContent = `${initial_state.rho.toFixed(3)} kg/m³`;
+
+        // UI für Zielzustand füllen
+        outputs.target.x_g_kg.textContent = `${target_state.x_g_kg.toFixed(2)} g/kg`;
+        outputs.target.x_g_m3.textContent = `${target_state.x_g_m3.toFixed(2)} g/m³`;
+        outputs.target.h.textContent = `${target_state.h.toFixed(2)} kJ/kg`;
+        outputs.target.td.textContent = `${target_state.Td.toFixed(1)} °C`;
+        outputs.target.tw.textContent = `${target_state.Tw.toFixed(1)} °C`;
+        outputs.target.rho.textContent = `${target_state.rho.toFixed(3)} kg/m³`;
+        
+        // --- PROZESSBERECHNUNG ---
+        // Massenstrom (kg/s)
+        const m_dot = (v_flow * initial_state.rho) / 3600;
+        // Enthalpie-Differenz (kJ/kg)
+        const h_diff = target_state.h - initial_state.h;
+        // Gesamtleistung (kW)
+        const power_total = m_dot * h_diff;
+
+        // Wasser-Differenz (kg/h)
+        const water_diff_kg_s = m_dot * ( (target_state.x_g_kg - initial_state.x_g_kg) / 1000 );
+        const water_diff_kg_h = water_diff_kg_s * 3600;
+
+        // UI für Prozess füllen
+        outputs.process.power_label.textContent = power_total > 0 ? "Erforderliche Heizleistung" : "Erforderliche Kühlleistung";
+        outputs.process.power_total.textContent = `${Math.abs(power_total).toFixed(2)} kW`;
+        outputs.process.power_total.style.color = power_total > 0 ? 'var(--secondary-color)' : 'var(--primary-color)';
+
+        const water_action = water_diff_kg_h > 0 ? "Befeuchtung" : "Entfeuchtung";
+        outputs.process.water_diff.textContent = `${Math.abs(water_diff_kg_h).toFixed(2)} kg/h (${water_action})`;
+
     }
 
     // --- EVENT LISTENERS ---
-    tempInput.addEventListener('input', calculatePsychrometrics);
-    humidityInput.addEventListener('input', calculatePsychrometrics);
-    modeToggle.addEventListener('change', handleModeChange);
+    Object.values(inputs).forEach(input => {
+        input.addEventListener('input', updateAll);
+    });
 
     // --- ANWENDUNG INITIALISIEREN ---
-    calculatePsychrometrics(); // Beim Laden einmal berechnen
-    handleModeChange(); // Korrekten Modus beim Laden einstellen
+    updateAll();
 });
