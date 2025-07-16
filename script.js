@@ -7,111 +7,108 @@ document.addEventListener('DOMContentLoaded', () => {
         t_target: document.getElementById('temp-target'),
         rh_target: document.getElementById('rh-target'),
     };
-
     const outputs = {
+        notification: document.getElementById('notification-area'),
         initial: {
-            x_g_kg: document.getElementById('x-initial-g-kg'),
-            x_g_m3: document.getElementById('x-initial-g-m3'),
-            h: document.getElementById('h-initial'),
-            td: document.getElementById('td-initial'),
-            tw: document.getElementById('tw-initial'),
-            rho: document.getElementById('rho-initial'),
+            x_g_kg: document.getElementById('x-initial-g-kg'), x_g_m3: document.getElementById('x-initial-g-m3'),
+            h: document.getElementById('h-initial'), td: document.getElementById('td-initial'),
+            comfort: document.getElementById('comfort-initial'),
         },
         target: {
-            x_g_kg: document.getElementById('x-target-g-kg'),
-            x_g_m3: document.getElementById('x-target-g-m3'),
-            h: document.getElementById('h-target'),
-            td: document.getElementById('td-target'),
-            tw: document.getElementById('tw-target'),
-            rho: document.getElementById('rho-target'),
+            x_g_kg: document.getElementById('x-target-g-kg'), x_g_m3: document.getElementById('x-target-g-m3'),
+            h: document.getElementById('h-target'), td: document.getElementById('td-target'),
+            comfort: document.getElementById('comfort-target'),
         },
         process: {
-            power_label: document.getElementById('power-label'),
-            power_total: document.getElementById('power-total'),
+            steps: document.getElementById('process-steps'),
             water_diff: document.getElementById('water-diff'),
         }
     };
 
+    // --- HILFSFUNKTIONEN ---
+    const showNotification = (message, type = 'error') => {
+        outputs.notification.textContent = message;
+        outputs.notification.className = `notification ${type}`;
+    };
+    const clearNotification = () => outputs.notification.className = 'notification hidden';
+
+    const isComfortable = (t, rh) => (t >= 20 && t <= 26 && rh >= 40 && rh <= 60);
+
     // --- BERECHNUNGSFUNKTION FÜR EINEN ZUSTAND ---
     function calculateState(t, rh) {
         if (isNaN(t) || isNaN(rh)) return null;
-
-        const p = 1013.25; // hPa, atmosphärischer Druck
-        
-        // Sättigungsdampfdruck (hPa)
+        const p = 1013.25;
         const SDD = 6.112 * Math.exp((17.62 * t) / (243.12 + t));
-        // Partialdampfdruck (hPa)
         const DD = (rh / 100) * SDD;
-        // Taupunkttemperatur (°C)
         const v = Math.log(DD / 6.112);
         const Td = (243.12 * v) / (17.62 - v);
-        // Absolute Feuchte (g/kg)
         const x_g_kg = 622 * (DD / (p - DD));
-        // Enthalpie (kJ/kg)
         const h = 1.006 * t + (x_g_kg / 1000) * (2501 + 1.86 * t);
-        // Dichte (kg/m³)
         const T_kelvin = t + 273.15;
-        const p_v = DD * 100;
-        const p_d = (p * 100) - p_v;
-        const rho = (p_d / (287.058 * T_kelvin)) + (p_v / (461.52 * T_kelvin));
-        // Feuchtkugeltemperatur (°C) - Annäherung nach Stull
-        const Tw = t * Math.atan(0.151977 * Math.pow(rh + 8.313659, 0.5)) + Math.atan(t + rh) - Math.atan(rh - 1.676331) + 0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) - 4.686035;
-        // Wassergehalt (g/m³)
+        const rho = ((p - DD) * 100) / (287.058 * T_kelvin) + (DD * 100) / (461.52 * T_kelvin);
         const x_g_m3 = x_g_kg * rho;
+        const comfortable = isComfortable(t, rh);
 
-        return { t, rh, Td, x_g_kg, x_g_m3, h, rho, Tw };
+        return { t, rh, Td, x_g_kg, x_g_m3, h, rho, comfortable };
     }
 
     // --- HAUPTFUNKTION ZUR AKTUALISIERUNG ---
     function updateAll() {
+        // Validierung der Eingaben
+        if (parseFloat(inputs.rh_initial.value) > 100 || parseFloat(inputs.rh_target.value) > 100) {
+            showNotification('Physikalisch nicht möglich: Relative Feuchte darf 100% nicht überschreiten.');
+            return;
+        }
+        clearNotification();
+
         const initial_state = calculateState(parseFloat(inputs.t_initial.value), parseFloat(inputs.rh_initial.value));
         const target_state = calculateState(parseFloat(inputs.t_target.value), parseFloat(inputs.rh_target.value));
         const v_flow = parseFloat(inputs.v_flow.value);
 
         if (!initial_state || !target_state || isNaN(v_flow)) return;
 
-        // UI für Ausgangszustand füllen
-        outputs.initial.x_g_kg.textContent = `${initial_state.x_g_kg.toFixed(2)} g/kg`;
-        outputs.initial.x_g_m3.textContent = `${initial_state.x_g_m3.toFixed(2)} g/m³`;
-        outputs.initial.h.textContent = `${initial_state.h.toFixed(2)} kJ/kg`;
-        outputs.initial.td.textContent = `${initial_state.Td.toFixed(1)} °C`;
-        outputs.initial.tw.textContent = `${initial_state.Tw.toFixed(1)} °C`;
-        outputs.initial.rho.textContent = `${initial_state.rho.toFixed(3)} kg/m³`;
+        // UI für Zustände füllen
+        const updateStateUI = (state, ui) => {
+            ui.x_g_kg.textContent = `${state.x_g_kg.toFixed(2)} g/kg`;
+            ui.x_g_m3.textContent = `${state.x_g_m3.toFixed(2)} g/m³`;
+            ui.h.textContent = `${state.h.toFixed(2)} kJ/kg`;
+            ui.td.textContent = `${state.Td.toFixed(1)} °C`;
+            ui.comfort.className = state.comfortable ? 'comfort-status' : 'comfort-status hidden';
+        };
+        updateStateUI(initial_state, outputs.initial);
+        updateStateUI(target_state, outputs.target);
 
-        // UI für Zielzustand füllen
-        outputs.target.x_g_kg.textContent = `${target_state.x_g_kg.toFixed(2)} g/kg`;
-        outputs.target.x_g_m3.textContent = `${target_state.x_g_m3.toFixed(2)} g/m³`;
-        outputs.target.h.textContent = `${target_state.h.toFixed(2)} kJ/kg`;
-        outputs.target.td.textContent = `${target_state.Td.toFixed(1)} °C`;
-        outputs.target.tw.textContent = `${target_state.Tw.toFixed(1)} °C`;
-        outputs.target.rho.textContent = `${target_state.rho.toFixed(3)} kg/m³`;
-        
         // --- PROZESSBERECHNUNG ---
-        // Massenstrom (kg/s)
+        outputs.process.steps.innerHTML = ''; // Prozessschritte zurücksetzen
         const m_dot = (v_flow * initial_state.rho) / 3600;
-        // Enthalpie-Differenz (kJ/kg)
-        const h_diff = target_state.h - initial_state.h;
-        // Gesamtleistung (kW)
-        const power_total = m_dot * h_diff;
 
-        // Wasser-Differenz (kg/h)
-        const water_diff_kg_s = m_dot * ( (target_state.x_g_kg - initial_state.x_g_kg) / 1000 );
-        const water_diff_kg_h = water_diff_kg_s * 3600;
-
-        // UI für Prozess füllen
-        outputs.process.power_label.textContent = power_total > 0 ? "Erforderliche Heizleistung" : "Erforderliche Kühlleistung";
-        outputs.process.power_total.textContent = `${Math.abs(power_total).toFixed(2)} kW`;
-        outputs.process.power_total.style.color = power_total > 0 ? 'var(--secondary-color)' : 'var(--primary-color)';
-
-        const water_action = water_diff_kg_h > 0 ? "Befeuchtung" : "Entfeuchtung";
+        // Fall 1: Entfeuchtung (ggf. mit Nacherwärmung)
+        if (target_state.x_g_kg < initial_state.x_g_kg) {
+            const intermediate_state = calculateState(target_state.Td, 100);
+            
+            const cooling_power = m_dot * (intermediate_state.h - initial_state.h);
+            const heating_power = m_dot * (target_state.h - intermediate_state.h);
+            
+            outputs.process.steps.innerHTML += `<div class="result-item large"><span class="label">Kühlleistung (bis ${intermediate_state.t.toFixed(1)}°C)</span><span class="value">${Math.abs(cooling_power).toFixed(2)} kW</span></div>`;
+            if (heating_power > 0.1) {
+                outputs.process.steps.innerHTML += `<div class="result-item large"><span class="label">Heizleistung (Nacherwärmung)</span><span class="value">${heating_power.toFixed(2)} kW</span></div>`;
+            }
+        } 
+        // Fall 2: Befeuchtung, reines Heizen oder Kühlen
+        else {
+            const total_power = m_dot * (target_state.h - initial_state.h);
+            const label = total_power > 0 ? 'Heizleistung' : 'Kühlleistung';
+            outputs.process.steps.innerHTML = `<div class="result-item large"><span class="label">${label}</span><span class="value">${Math.abs(total_power).toFixed(2)} kW</span></div>`;
+        }
+        
+        // Wasserbilanz
+        const water_diff_kg_h = m_dot * (target_state.x_g_kg - initial_state.x_g_kg) * 3600 / 1000;
+        const water_action = water_diff_kg_h > 0 ? 'Befeuchtung' : 'Entfeuchtung';
         outputs.process.water_diff.textContent = `${Math.abs(water_diff_kg_h).toFixed(2)} kg/h (${water_action})`;
-
     }
 
     // --- EVENT LISTENERS ---
-    Object.values(inputs).forEach(input => {
-        input.addEventListener('input', updateAll);
-    });
+    Object.values(inputs).forEach(input => input.addEventListener('input', updateAll));
 
     // --- ANWENDUNG INITIALISIEREN ---
     updateAll();
