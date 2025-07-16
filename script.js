@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- HAUPTFUNKTION ZUR AKTUALISIERUNG ---
     function updateAll() {
-        // Validierung
         if (parseFloat(inputs.rh_initial.value) > 100 || parseFloat(inputs.rh_target.value) > 100) {
             showNotification('Physikalisch nicht möglich: Relative Feuchte darf 100% nicht überschreiten.');
             return;
@@ -68,51 +67,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!initial_state || !target_state || isNaN(v_flow)) return;
 
-        // UI für Zustände füllen
         const updateStateUI = (state, ui) => {
             ui.x_g_kg.textContent = `${state.x_g_kg.toFixed(2)} g/kg`;
             ui.h.textContent = `${state.h.toFixed(2)} kJ/kg`;
             ui.td.textContent = `${state.Td.toFixed(1)} °C`;
             ui.tw.textContent = `${state.Tw.toFixed(1)} °C`;
-            ui.comfort.className = state.comfortable ? 'comfort-status' : 'comfort-status hidden';
+            if (state.comfortable) {
+                ui.comfort.textContent = '✅ Im Behaglichkeitsfeld';
+                ui.comfort.className = 'comfort-status success';
+            } else {
+                ui.comfort.textContent = '⚠️ Außerhalb Behaglichkeitsfeld';
+                ui.comfort.className = 'comfort-status warning';
+            }
         };
         updateStateUI(initial_state, outputs.initial);
         updateStateUI(target_state, outputs.target);
 
-        // --- PROZESSBERECHNUNG ---
         const m_dot = (v_flow * initial_state.rho) / 3600;
         let cooling_power = 0;
         let heating_power = 0;
         
-        // Fall 1: Entfeuchtung (ggf. mit Nacherwärmung)
-        if (target_state.x_g_kg < initial_state.x_g_kg) {
+        if (target_state.x_g_kg < initial_state.x_g_kg) { // Fall 1: Entfeuchtung
             const intermediate_state = calculateState(target_state.Td, 100);
             cooling_power = m_dot * (intermediate_state.h - initial_state.h);
             heating_power = m_dot * (target_state.h - intermediate_state.h);
-            const cooler_temp_example = (target_state.Td - 3).toFixed(1);
-            outputs.process.explanation.innerHTML = `<strong>Entfeuchtungsprozess:</strong> Um die Luft auf den Ziel-Taupunkt von <strong>${target_state.Td.toFixed(1)}°C</strong> zu entfeuchten, muss sie am Kühler auf diesen Wert abgekühlt werden. In der Praxis benötigt man dafür eine Kühlwassertemperatur von ca. <strong>${cooler_temp_example}°C</strong>. Anschließend wird die Luft ggf. wieder aufgeheizt.`;
-        } 
-        // Fall 2: Befeuchtung, reines Heizen oder Kühlen
-        else {
+            outputs.process.explanation.innerHTML = `<strong>Entfeuchtungsprozess:</strong> Um die Luft auf den Ziel-Taupunkt von <strong>${target_state.Td.toFixed(1)}°C</strong> zu entfeuchten, muss die Temperatur des Kühlmediums (Wasser/Sole) in der Praxis ca. <strong>1 bis 3 °C darunter</strong> liegen. Anschließend wird die Luft auf die Zieltemperatur nacherwärmt.`;
+        } else { // Fall 2: Kein Entfeuchtungsbedarf
             const total_power = m_dot * (target_state.h - initial_state.h);
             if (total_power > 0) heating_power = total_power;
             else cooling_power = total_power;
-            outputs.process.explanation.innerHTML = `<strong>Entfeuchtungsprozess:</strong> Bei diesem Prozess ist keine Entfeuchtung nötig, da die absolute Feuchte gleich bleibt oder zunimmt. Die Luft wird direkt gekühlt, geheizt oder befeuchtet.`;
+            outputs.process.explanation.innerHTML = `<strong>Prozess:</strong> Bei diesem Prozess ist keine Entfeuchtung nötig, da die absolute Feuchte gleich bleibt oder zunimmt. Die Luft wird direkt gekühlt, geheizt oder befeuchtet.`;
         }
         
-        // Leistungs-UI
         outputs.process.power_heat.textContent = `${Math.abs(heating_power).toFixed(2)} kW`;
         outputs.process.power_cool.textContent = `${Math.abs(cooling_power).toFixed(2)} kW`;
         
-        // Wasserbilanz
         const water_diff_kg_h = m_dot * (target_state.x_g_kg - initial_state.x_g_kg) * 3600 / 1000;
         const water_action = water_diff_kg_h > 0 ? 'Befeuchtung' : 'Entfeuchtung';
         outputs.process.water_diff.textContent = `${Math.abs(water_diff_kg_h).toFixed(2)} kg/h (${water_action})`;
     }
 
-    // --- EVENT LISTENERS ---
     Object.values(inputs).forEach(input => input.addEventListener('input', updateAll));
     
-    // --- ANWENDUNG INITIALISIEREN ---
     updateAll();
 });
