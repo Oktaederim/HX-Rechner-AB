@@ -22,8 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         process: {
             power_heat: document.getElementById('power-heat'),
             power_cool: document.getElementById('power-cool'),
-            water_diff: document.getElementById('water-diff'),
-            explanation: document.getElementById('explanation-dehumidification'),
+            water_diff: document.getElementById('water-diff')
         }
     };
 
@@ -91,12 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const intermediate_state = calculateState(target_state.Td, 100);
             cooling_power = m_dot * (intermediate_state.h - initial_state.h);
             heating_power = m_dot * (target_state.h - intermediate_state.h);
-            outputs.process.explanation.innerHTML = `<strong>Entfeuchtungsprozess:</strong> Um die Luft auf den Ziel-Taupunkt von <strong>${target_state.Td.toFixed(1)}°C</strong> zu entfeuchten, muss die Temperatur des Kühlmediums (Wasser/Sole) in der Praxis ca. <strong>1 bis 3 °C darunter</strong> liegen. Anschließend wird die Luft auf die Zieltemperatur nacherwärmt.`;
         } else { // Fall 2: Kein Entfeuchtungsbedarf
             const total_power = m_dot * (target_state.h - initial_state.h);
             if (total_power > 0) heating_power = total_power;
             else cooling_power = total_power;
-            outputs.process.explanation.innerHTML = `<strong>Prozess:</strong> Bei diesem Prozess ist keine Entfeuchtung nötig, da die absolute Feuchte gleich bleibt oder zunimmt. Die Luft wird direkt gekühlt, geheizt oder befeuchtet.`;
         }
         
         outputs.process.power_heat.textContent = `${Math.abs(heating_power).toFixed(2)} kW`;
