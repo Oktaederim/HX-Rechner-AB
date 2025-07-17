@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lüftungstechnischer Prozess-Rechner</title>
     <link rel="stylesheet" href="style.css">
+    
+    <script>
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
 </head>
 <body>
 
@@ -77,12 +90,26 @@
                 <span class="label">Wasserbilanz</span>
                 <span class="value" id="water-diff"></span>
             </div>
-             <div class="explanations">
-                <h3>Erläuterungen für die Praxis</h3>
-                <p id="explanation-dehumidification"></p>
-                <p><strong>Feuchtkugeltemperatur (t_w):</strong> Dies ist die tiefste Temperatur, die durch rein adiabate Verdunstungskühlung (z.B. in einem Befeuchter) erreicht werden kann. Sie ist die theoretische Grenze für die Kühlung ohne externen Kälteeinsatz.</p>
-             </div>
         </div>
+
+        <details class="info-box">
+            <summary>ℹ️ Info & Verwendete Formeln</summary>
+            <div class="info-content">
+                <h4>Wozu dient dieser Rechner?</h4>
+                <p>Dieser Rechner ermittelt die thermodynamischen Zustände von feuchter Luft und berechnet die erforderliche Heiz- und Kühlleistung, um die Luft von einem Ausgangs- zu einem Zielzustand zu verändern. Er ist für die schnelle Auslegung und Analyse von lüftungstechnischen Prozessen konzipiert.</p>
+                
+                <h4>Verwendete Formeln (vereinfacht)</h4>
+                <ul>
+                    <li><strong>Absolute Feuchte (x) [g/kg]:</strong><br> $x = 622 \cdot \frac{p_D}{p_{Luft} - p_D}$ <br><small>wobei $p_D$ der Wasserdampfpartialdruck ist.</small></li>
+                    <li><strong>Enthalpie (h) [kJ/kg]:</strong><br> $h \approx 1,006 \cdot t + \frac{x}{1000} \cdot (2501 + 1,86 \cdot t)$</li>
+                    <li><strong>Leistung (P) [kW]:</strong><br> $P = \dot{m} \cdot (h_{Ziel} - h_{Ausgang})$<br><small>wobei $\dot{m}$ der Massenstrom in kg/s ist.</small></li>
+                </ul>
+
+                <h4>Wichtiger Hinweis zur Genauigkeit</h4>
+                <p>Für eine präzise Leistungsberechnung ermittelt dieser Rechner die **Luftdichte ($\rho$)** für jeden Zustand dynamisch und verwendet keinen pauschalen Normwert. Der Massenstrom ($\dot{m} = \frac{\dot{V} \cdot \rho}{3600}$) wird daher auf Basis der Dichte am Lufteintritt (Ausgangszustand) berechnet.</p>
+            </div>
+        </details>
+
     </div>
 
     <script src="script.js"></script>
